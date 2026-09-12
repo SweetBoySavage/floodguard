@@ -153,7 +153,7 @@ export default function FloodMap({
             checked={layers.infrastructure}
             onChange={(event) => setLayers((current) => ({ ...current, infrastructure: event.target.checked }))}
           />
-          Elevation options
+          Locally low terrain (approx.)
         </label>
         {chattogramSelected && (
           <label className="demo-toggle">
