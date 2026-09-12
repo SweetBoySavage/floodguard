@@ -168,6 +168,7 @@ contract exactly.
 model = ChatOpenAI(
     model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
     temperature=0.2,
+    use_responses_api=True,
 )
 graph = create_agent(
     model=model,
