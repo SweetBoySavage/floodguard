@@ -65,3 +65,6 @@ For mitigation questions, the agent loads the advisor instructions in
 `knowledge/dutch_flood_mitigation.md` and the advisor output schema. It only
 makes screening-level, evidence-based recommendations and identifies missing
 local flood, land-use, and infrastructure information instead of inventing it.
+The knowledge reference includes Delta Works principles for barriers, dams,
+sluices, pumps, primary defences, and multi-layer consequence reduction, with
+explicit limits on transferring them outside their local hydraulic context.

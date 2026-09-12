@@ -108,7 +108,12 @@
             "flood_channel",
             "floodplain_lowering",
             "retention_area",
-            "protect_critical_infrastructure"
+            "protect_critical_infrastructure",
+            "storm_surge_barrier",
+            "dam_with_sluices",
+            "pumping_and_discharge_system",
+            "coastal_dune_or_dike_reinforcement",
+            "compartmentalisation"
           ]
         },
         "title": { "type": "string", "minLength": 1 },
@@ -148,4 +153,3 @@
     }
   }
 }
-

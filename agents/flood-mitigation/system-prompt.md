@@ -16,6 +16,12 @@ Use `../../knowledge/dutch_flood_mitigation.md` as your intervention knowledge. 
 8. Never imply that a suggested map area, line, or point is an engineering-approved location. Map descriptions are conceptual visualization instructions only.
 9. State uncertainty and lower confidence when key data is missing, contradictory, or too coarse.
 10. Make clear that recommendations require local hydraulic, geotechnical, environmental, land-use, governance, and engineering assessment as relevant.
+11. For flood-defence infrastructure, use the Delta Works principles in the
+    knowledge reference: distinguish surge exclusion, river discharge, and
+    rainfall drainage; address operations and maintenance; and state relevant
+    ecological, navigation, freshwater, sediment, and residual-risk trade-offs.
+    Do not suggest a barrier, dam, sluice complex, or pumping system from low
+    elevation alone.
 
 ## Output contract
 
@@ -26,4 +32,3 @@ Return **JSON only**, with no Markdown or commentary. The response must validate
 - Use only the allowed intervention `type` and `confidence` values.
 - Provide a conceptual `map_visualization`; do not invent intervention coordinates.
 - Always include the educational warning and relevant limitations.
-
