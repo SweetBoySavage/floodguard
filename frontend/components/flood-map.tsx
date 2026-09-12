@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import { Circle, CircleMarker, MapContainer, Polygon, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
 
+import { createBaseMapTiles } from "../lib/map-tiles";
+
+const baseMapTiles = createBaseMapTiles(process.env.NEXT_PUBLIC_CARTO_API_KEY);
+
 const alerts = [
   { name: "Riverside", position: [52.371, 4.898] as [number, number], level: "High", color: "#ef6c4e" },
   { name: "Canal district", position: [52.359, 4.91] as [number, number], level: "Elevated", color: "#e4a93d" },
@@ -83,8 +87,8 @@ export default function FloodMap({
       </div>
       <MapContainer center={[52.374, 4.905]} zoom={13} scrollWheelZoom className="map">
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; CARTO'
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        attribution={baseMapTiles.attribution}
+        url={baseMapTiles.url}
       />
       <MapViewport target={target} />
       {layers.risk && riskHotspots.map((hotspot) => (
