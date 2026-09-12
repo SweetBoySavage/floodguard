@@ -19,6 +19,7 @@ from langgraph.checkpoint.memory import MemorySaver
 load_dotenv()
 
 ELEVATION_API_URL = "https://api.open-meteo.com/v1/elevation"
+GEOCODING_API_URL = "https://geocoding-api.open-meteo.com/v1/search"
 
 
 @tool
@@ -32,6 +33,51 @@ def get_flood_alerts(area: str) -> str:
         f"Sample alert data for {area}: Riverside is high risk; Canal district "
         "is elevated; North quay is on watch. Data was last refreshed at 09:30 UTC."
     )
+
+
+@tool
+def get_location_coordinates(location: str) -> str:
+    """Resolve a place name to WGS84 latitude and longitude coordinates.
+
+    Use this before get_elevation when a user gives a named place instead of
+    coordinates. Include a country, region, or city context when the place name
+    is ambiguous. Returns the best matching result from the public geocoder.
+    """
+    location = location.strip()
+    if not location:
+        return "Please provide a location name."
+
+    # Open-Meteo's `name` parameter is a place-name search rather than a full
+    # postal-style address. Keep the primary name for queries such as
+    # "Amsterdam, Netherlands"; returned matches retain their country context.
+    place_name = location.split(",", maxsplit=1)[0].strip()
+    query = urlencode({"name": place_name, "count": 3, "language": "en", "format": "json"})
+    request = Request(
+        f"{GEOCODING_API_URL}?{query}",
+        headers={"Accept": "application/json", "User-Agent": "FloodGuard/0.1"},
+    )
+    try:
+        with urlopen(request, timeout=10) as response:  # noqa: S310 -- fixed public API URL
+            payload = loads(response.read().decode("utf-8"))
+        results = payload.get("results", [])
+    except (HTTPError, URLError, TimeoutError, JSONDecodeError, TypeError) as error:
+        return f"Unable to retrieve coordinates right now: {error}."
+
+    if not results:
+        return f"No location found for '{location}'. Try adding a country or region."
+
+    matches = []
+    for result in results:
+        name = result.get("name", "Unnamed location")
+        admin1 = result.get("admin1")
+        country = result.get("country")
+        context = ", ".join(part for part in (admin1, country) if part)
+        label = f"{name} ({context})" if context else name
+        matches.append(
+            f"{label}: {result['latitude']:.5f}, {result['longitude']:.5f}"
+        )
+
+    return "Coordinates (WGS84), from Open-Meteo Geocoding API:\n" + "\n".join(matches)
 
 
 @tool
@@ -76,10 +122,11 @@ def get_elevation(latitude: float, longitude: float) -> str:
 
 SYSTEM_PROMPT = """You are FloodGuard, a concise flood-operations assistant.
 Use get_flood_alerts whenever the user asks for conditions by location. Use
-get_elevation when the user supplies WGS84 latitude/longitude and asks about
-terrain height. Clearly label sample flood data as sample data, do not invent
-emergency instructions, and recommend users follow local authorities for
-life-safety decisions."""
+get_location_coordinates to resolve a named place into WGS84 coordinates; call
+it before get_elevation if a user asks about terrain height for a place but has
+not supplied coordinates. Clearly label sample flood data as sample data, do
+not invent emergency instructions, and recommend users follow local authorities
+for life-safety decisions."""
 
 model = ChatOpenAI(
     model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
@@ -87,7 +134,7 @@ model = ChatOpenAI(
 )
 graph = create_agent(
     model=model,
-    tools=[get_flood_alerts, get_elevation],
+    tools=[get_flood_alerts, get_location_coordinates, get_elevation],
     system_prompt=SYSTEM_PROMPT,
     checkpointer=MemorySaver(),
 )

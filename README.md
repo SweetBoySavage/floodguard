@@ -39,7 +39,9 @@ trusted hydrology/alert source before relying on the app operationally.
 
 ## Elevation lookup
 
-The agent can answer a coordinate-based question such as: "What is the terrain
-elevation at 52.371, 4.898?" It calls Open-Meteo's public Elevation API, which
-uses a 90 m Copernicus digital elevation model. This is terrain elevation, not
-a water level or a survey-grade measurement.
+The agent can resolve a location name and look up its terrain elevation. For
+example: "What are the coordinates for Amsterdam?" or "What is the terrain
+elevation in Amsterdam?" It first uses
+Open-Meteo's public Geocoding API to find WGS84 coordinates, then can use its
+public Elevation API, which uses a 90 m Copernicus digital elevation model.
+This is terrain elevation, not a water level or a survey-grade measurement.
