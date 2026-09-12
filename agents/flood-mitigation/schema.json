@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/flood-mitigation-advisor/schema.json",
+  "title": "Flood Mitigation Advisor input or output",
+  "description": "Validate agent input with #/$defs/input and agent output with #/$defs/output. The root accepts either document.",
+  "oneOf": [
+    { "$ref": "#/$defs/input" },
+    { "$ref": "#/$defs/output" }
+  ],
+  "$defs": {
+    "nullableNonNegativeNumber": {
+      "type": ["number", "null"],
+      "minimum": 0
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "latitude", "longitude"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+        "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
+      }
+    },
+    "criticalInfrastructureItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "name"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "latitude": { "type": ["number", "null"], "minimum": -90, "maximum": 90 },
+        "longitude": { "type": ["number", "null"], "minimum": -180, "maximum": 180 }
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["location"],
+      "properties": {
+        "location": { "$ref": "#/$defs/location" },
+        "flood_type": {
+          "type": ["string", "null"],
+          "enum": ["riverine", "coastal", "pluvial", "mixed", "unknown", null]
+        },
+        "flood_risk": {
+          "type": ["string", "null"],
+          "enum": ["low", "medium", "high", "unknown", null]
+        },
+        "elevation": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "median_m": { "type": ["number", "null"] },
+                "min_m": { "type": ["number", "null"] }
+              }
+            }
+          ]
+        },
+        "distance_to_river_m": { "$ref": "#/$defs/nullableNonNegativeNumber" },
+        "distance_to_coast_m": { "$ref": "#/$defs/nullableNonNegativeNumber" },
+        "urban_density": {
+          "type": ["string", "null"],
+          "enum": ["low", "medium", "high", "unknown", null]
+        },
+        "critical_infrastructure": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "array",
+              "items": { "$ref": "#/$defs/criticalInfrastructureItem" }
+            }
+          ]
+        },
+        "notes": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        }
+      }
+    },
+    "mapVisualization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "description"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["line", "polygon", "point_and_buffer", "line_and_buffer", "area_shading"]
+        },
+        "description": { "type": "string", "minLength": 1 }
+      }
+    },
+    "intervention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "title", "reason", "suitable_because", "map_visualization", "confidence"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "dike_reinforcement",
+            "setback_dike",
+            "flood_channel",
+            "floodplain_lowering",
+            "retention_area",
+            "protect_critical_infrastructure"
+          ]
+        },
+        "title": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "suitable_because": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "map_visualization": { "$ref": "#/$defs/mapVisualization" },
+        "confidence": { "type": "string", "enum": ["low", "medium", "high"] }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "risk_factors", "interventions", "limitations", "warning"],
+      "properties": {
+        "summary": { "type": "string", "minLength": 1 },
+        "risk_factors": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "interventions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": { "$ref": "#/$defs/intervention" }
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "warning": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
+

@@ -1,0 +1,30 @@
+{
+  "location": {
+    "name": "Illustrative area near Sirajganj, Bangladesh",
+    "latitude": 24.45,
+    "longitude": 89.70
+  },
+  "flood_type": "riverine",
+  "flood_risk": "high",
+  "elevation": {
+    "median_m": 11,
+    "min_m": 8
+  },
+  "distance_to_river_m": 700,
+  "distance_to_coast_m": null,
+  "urban_density": "medium",
+  "critical_infrastructure": [
+    {
+      "type": "hospital",
+      "name": "Illustrative district hospital",
+      "latitude": 24.46,
+      "longitude": 89.69
+    }
+  ],
+  "notes": [
+    "All values are rounded and illustrative for the prototype.",
+    "The GIS summary shows broad, mostly undeveloped floodplain patches between the settlement and the river.",
+    "No existing defence condition, flood depth, flow direction, land ownership, or drainage capacity data is available."
+  ]
+}
+

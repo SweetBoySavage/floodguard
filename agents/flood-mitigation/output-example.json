@@ -1,0 +1,61 @@
+{
+  "summary": "The supplied GIS summary indicates a populated, relatively low-lying area with high riverine flood risk close to a major river.",
+  "risk_factors": [
+    "Flood type is identified as riverine",
+    "Flood risk is classified as high",
+    "The area is about 700 metres from the river",
+    "A hospital is present in the assessed area"
+  ],
+  "interventions": [
+    {
+      "type": "setback_dike",
+      "title": "Explore creating more space for the river",
+      "reason": "A conceptual set-back defence could widen the active floodplain and give high river flows more space, subject to land-use and engineering assessment.",
+      "suitable_because": [
+        "Riverine flooding is the identified hazard",
+        "The site is close to the river",
+        "The GIS summary identifies broad, mostly undeveloped floodplain patches"
+      ],
+      "map_visualization": {
+        "type": "line_and_buffer",
+        "description": "Show the existing river corridor and a conceptual inland defence line with the intervening area shaded; label it as illustrative only."
+      },
+      "confidence": "medium"
+    },
+    {
+      "type": "floodplain_lowering",
+      "title": "Screen floodplain areas for improved conveyance",
+      "reason": "Selected floodplain areas might be reshaped to provide more room for high river flows, but terrain and hydraulic data are needed before judging feasibility.",
+      "suitable_because": [
+        "Riverine flooding is the identified hazard",
+        "Broad floodplain patches are reported between the settlement and the river"
+      ],
+      "map_visualization": {
+        "type": "area_shading",
+        "description": "Shade broad candidate floodplain areas for further study without assigning excavation depths or exact project boundaries."
+      },
+      "confidence": "low"
+    },
+    {
+      "type": "protect_critical_infrastructure",
+      "title": "Assess site-level protection for the hospital",
+      "reason": "Reducing the hospital's vulnerability and protecting access or essential services could limit consequences during a flood.",
+      "suitable_because": [
+        "A hospital is identified in the assessed area",
+        "The surrounding flood risk is classified as high"
+      ],
+      "map_visualization": {
+        "type": "point_and_buffer",
+        "description": "Mark the hospital and a conceptual review buffer, including its access routes if those data become available."
+      },
+      "confidence": "medium"
+    }
+  ],
+  "limitations": [
+    "The input values are illustrative and do not constitute a site survey.",
+    "No hydraulic simulation, defence-condition assessment, or flood-depth analysis was performed.",
+    "Land ownership, displacement, environmental impacts, and downstream effects are unknown.",
+    "Conceptual map symbols are not engineering-approved locations or boundaries."
+  ],
+  "warning": "Educational screening only; not an engineering assessment. Flooding may still occur under any mitigation scenario."
+}
