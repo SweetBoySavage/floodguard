@@ -9,13 +9,15 @@ from urllib.request import Request, urlopen
 
 import uvicorn
 from ag_ui_langgraph import add_langgraph_fastapi_endpoint
-from copilotkit import CopilotKitMiddleware, LangGraphAGUIAgent
+from copilotkit import LangGraphAGUIAgent
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
+
+from copilotkit_compat import ResponsesSafeCopilotKitMiddleware
 
 load_dotenv()
 
@@ -175,7 +177,7 @@ model = ChatOpenAI(
 graph = create_agent(
     model=model,
     tools=[get_flood_alerts, get_location_coordinates, get_elevation],
-    middleware=[CopilotKitMiddleware()],
+    middleware=[ResponsesSafeCopilotKitMiddleware()],
     system_prompt=SYSTEM_PROMPT,
     checkpointer=MemorySaver(),
 )
