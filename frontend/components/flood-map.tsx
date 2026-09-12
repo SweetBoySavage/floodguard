@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Circle, CircleMarker, MapContainer, Polygon, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
+import { Circle, CircleMarker, MapContainer, Popup, TileLayer, useMap } from "react-leaflet";
 
 import { createBaseMapTiles } from "../lib/map-tiles";
 
@@ -15,6 +15,7 @@ const alerts = [
 
 type MapTarget = { latitude: number; longitude: number; label: string };
 type MapLayers = { risk: boolean; infrastructure: boolean };
+type TerrainOpportunity = { latitude: number; longitude: number; elevation: number };
 
 const riskHotspots = [
   { name: "Low-lying waterfront", position: [52.369, 4.884] as [number, number], radius: 950, color: "#e04f40", opacity: 0.22 },
@@ -22,18 +23,17 @@ const riskHotspots = [
   { name: "Northern quay", position: [52.391, 4.916] as [number, number], radius: 620, color: "#f4cf57", opacity: 0.18 },
 ];
 
-const infrastructureOpportunities = [
-  {
-    name: "Conceptual retention area",
-    positions: [[52.356, 4.89], [52.356, 4.898], [52.351, 4.898], [52.351, 4.89]] as [number, number][],
-    description: "Illustrative screening area for temporary water storage.",
-  },
-  {
-    name: "Conceptual defence corridor",
-    positions: [[52.383, 4.884], [52.379, 4.895], [52.374, 4.906]] as [number, number][],
-    description: "Illustrative corridor for a flood-defence assessment.",
-  },
-];
+const ELEVATION_API_URL = "https://api.open-meteo.com/v1/elevation";
+
+function makeElevationGrid(target: MapTarget) {
+  const offsets = [-0.009, -0.0045, 0, 0.0045, 0.009];
+  return offsets.flatMap((latitudeOffset) =>
+    offsets.map((longitudeOffset) => ({
+      latitude: target.latitude + latitudeOffset,
+      longitude: target.longitude + longitudeOffset,
+    })),
+  );
+}
 
 function MapViewport({ target }: { target?: MapTarget }) {
   const map = useMap();
@@ -61,8 +61,47 @@ export default function FloodMap({
   requestedLayers: MapLayers;
 }) {
   const [layers, setLayers] = useState(requestedLayers);
+  const [terrainOpportunities, setTerrainOpportunities] = useState<TerrainOpportunity[]>([]);
 
   useEffect(() => setLayers(requestedLayers), [requestedLayers]);
+
+  useEffect(() => {
+    if (!target) {
+      setTerrainOpportunities([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    const grid = makeElevationGrid(target);
+    const params = new URLSearchParams({
+      latitude: grid.map((point) => point.latitude.toFixed(5)).join(","),
+      longitude: grid.map((point) => point.longitude.toFixed(5)).join(","),
+    });
+
+    fetch(`${ELEVATION_API_URL}?${params}`, { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Elevation request failed (${response.status})`);
+        return response.json() as Promise<{ elevation?: number[] }>;
+      })
+      .then((data) => {
+        if (!data.elevation || data.elevation.length !== grid.length) throw new Error("Incomplete elevation data");
+
+        // Lowest cells are candidate retention areas only. This terrain screen
+        // does not establish storage, flow paths, land availability, or safety.
+        const lowest = grid
+          .map((point, index) => ({ ...point, elevation: data.elevation![index] }))
+          .sort((a, b) => a.elevation - b.elevation)
+          .slice(0, 3);
+        setTerrainOpportunities(lowest);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        console.warn("Unable to generate elevation-based infrastructure opportunities", error);
+        setTerrainOpportunities([]);
+      });
+
+    return () => controller.abort();
+  }, [target]);
 
   return (
     <div className="map-wrap">
@@ -82,7 +121,7 @@ export default function FloodMap({
             checked={layers.infrastructure}
             onChange={(event) => setLayers((current) => ({ ...current, infrastructure: event.target.checked }))}
           />
-          Protection options
+          Elevation options
         </label>
       </div>
       <MapContainer center={[52.374, 4.905]} zoom={13} scrollWheelZoom className="map">
@@ -101,22 +140,19 @@ export default function FloodMap({
           <Popup><strong>{hotspot.name}</strong><br />Illustrative risk-intensity area.</Popup>
         </Circle>
       ))}
-      {layers.infrastructure && infrastructureOpportunities.map((opportunity) => (
-        "positions" in opportunity ? (
-          opportunity.name.includes("retention") ? (
-            <Polygon
-              key={opportunity.name}
-              positions={opportunity.positions}
-              pathOptions={{ color: "#297e77", fillColor: "#5dc2aa", fillOpacity: 0.27, weight: 2, dashArray: "6 5" }}
-            >
-              <Popup><strong>{opportunity.name}</strong><br />{opportunity.description}</Popup>
-            </Polygon>
-          ) : (
-            <Polyline key={opportunity.name} positions={opportunity.positions} pathOptions={{ color: "#297e77", weight: 5, dashArray: "8 6" }}>
-              <Popup><strong>{opportunity.name}</strong><br />{opportunity.description}</Popup>
-            </Polyline>
-          )
-        ) : null
+      {layers.infrastructure && terrainOpportunities.map((opportunity, index) => (
+        <Circle
+          key={`${opportunity.latitude}-${opportunity.longitude}`}
+          center={[opportunity.latitude, opportunity.longitude]}
+          radius={280}
+          pathOptions={{ color: "#297e77", fillColor: "#5dc2aa", fillOpacity: 0.27, weight: 2, dashArray: "6 5" }}
+        >
+          <Popup>
+            <strong>Potential retention screening area {index + 1}</strong><br />
+            Low terrain cell: {opportunity.elevation.toFixed(0)} m above mean sea level.<br />
+            Generated from public elevation data; not an approved project location.
+          </Popup>
+        </Circle>
       ))}
       {alerts.map((alert) => (
         <CircleMarker

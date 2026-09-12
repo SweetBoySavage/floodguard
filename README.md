@@ -53,6 +53,11 @@ This is terrain elevation, not a water level or a survey-grade measurement.
 When the agent resolves a location, it also calls a CopilotKit frontend tool to
 pan and zoom the map to the selected result.
 
+The elevation-options overlay is generated for the selected location from a
+nearby Open-Meteo elevation grid. It highlights lower terrain cells as
+conceptual retention-screening candidates; it is not infrastructure design or
+evidence of viable water storage.
+
 ## Flood-mitigation recommendations
 
 For mitigation questions, the agent loads the advisor instructions in
