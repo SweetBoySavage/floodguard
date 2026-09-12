@@ -1,0 +1,18 @@
+[project]
+name = "floodguard-agent"
+version = "0.1.0"
+description = "LangChain flood operations agent exposed through AG-UI"
+requires-python = ">=3.11"
+dependencies = [
+  "ag-ui-langgraph>=0.0.31",
+  "copilotkit>=0.1.70",
+  "fastapi>=0.115",
+  "langchain>=1.0",
+  "langchain-openai>=0.3",
+  "langgraph>=0.3",
+  "python-dotenv>=1.0",
+  "uvicorn[standard]>=0.30"
+]
+
+[tool.uv]
+package = false
