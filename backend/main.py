@@ -2,6 +2,7 @@
 
 import os
 from json import JSONDecodeError, loads
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -20,6 +21,16 @@ load_dotenv()
 
 ELEVATION_API_URL = "https://api.open-meteo.com/v1/elevation"
 GEOCODING_API_URL = "https://geocoding-api.open-meteo.com/v1/search"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+MITIGATION_ADVISOR_PROMPT = (
+    PROJECT_ROOT / "agents" / "flood-mitigation" / "system-prompt.md"
+).read_text(encoding="utf-8")
+MITIGATION_KNOWLEDGE = (
+    PROJECT_ROOT / "knowledge" / "dutch_flood_mitigation.md"
+).read_text(encoding="utf-8")
+MITIGATION_SCHEMA = (
+    PROJECT_ROOT / "agents" / "flood-mitigation" / "schema.json"
+).read_text(encoding="utf-8")
 
 
 @tool
@@ -120,7 +131,7 @@ def get_elevation(latitude: float, longitude: float) -> str:
     )
 
 
-SYSTEM_PROMPT = """You are FloodGuard, a concise flood-operations assistant.
+SYSTEM_PROMPT = f"""You are FloodGuard, a concise flood-operations assistant.
 Use get_flood_alerts whenever the user asks for conditions by location. Use
 get_location_coordinates to resolve a named place into WGS84 coordinates; call
 it before get_elevation if a user asks about terrain height for a place but has
@@ -128,7 +139,26 @@ not supplied coordinates. When a user asks about any location, call the
 focus_map frontend tool with the selected latitude, longitude, and location
 label, so the map moves to that place. Clearly label sample flood data as sample
 data, do not invent emergency instructions, and recommend users follow local
-authorities for life-safety decisions."""
+authorities for life-safety decisions.
+
+When a user asks for flood-mitigation recommendations for an area, use the
+Flood Mitigation Advisor instructions, knowledge, and schema below. Resolve and
+focus the requested place first when it is a named location. The location name,
+coordinates, and elevation returned by tools are screening inputs only; never
+invent flood type, local defences, land use, infrastructure, or feasibility.
+Ask for the missing GIS or local context when it is needed to make a defensible
+recommendation. For mitigation requests, follow the advisor's JSON-only output
+contract exactly.
+
+--- Flood Mitigation Advisor instructions ---
+{MITIGATION_ADVISOR_PROMPT}
+
+--- Flood Mitigation knowledge ---
+{MITIGATION_KNOWLEDGE}
+
+--- Flood Mitigation schema ---
+{MITIGATION_SCHEMA}
+"""
 
 model = ChatOpenAI(
     model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),

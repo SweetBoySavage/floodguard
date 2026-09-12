@@ -52,3 +52,11 @@ This is terrain elevation, not a water level or a survey-grade measurement.
 
 When the agent resolves a location, it also calls a CopilotKit frontend tool to
 pan and zoom the map to the selected result.
+
+## Flood-mitigation recommendations
+
+For mitigation questions, the agent loads the advisor instructions in
+`agents/flood-mitigation/system-prompt.md` together with the interventions in
+`knowledge/dutch_flood_mitigation.md` and the advisor output schema. It only
+makes screening-level, evidence-based recommendations and identifies missing
+local flood, land-use, and infrastructure information instead of inventing it.
