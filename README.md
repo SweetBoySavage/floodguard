@@ -34,6 +34,10 @@ Requires Node.js 20+ and Python 3.11+ with [uv](https://docs.astral.sh/uv/).
 The frontend's runtime route forwards to `http://localhost:8123` by default.
 Set `LANGGRAPH_AGENT_URL` in `frontend/.env.local` if the agent is elsewhere.
 
+`frontend/.env.example` also includes `NEXT_PUBLIC_CARTO_API_KEY` for a
+restricted, browser-safe CARTO access token when you add CARTO Maps or data
+layers. The current public basemap does not require it.
+
 The map markers and alert tool deliberately return sample data; wire both to a
 trusted hydrology/alert source before relying on the app operationally.
 
