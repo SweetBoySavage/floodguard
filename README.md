@@ -45,3 +45,6 @@ elevation in Amsterdam?" It first uses
 Open-Meteo's public Geocoding API to find WGS84 coordinates, then can use its
 public Elevation API, which uses a 90 m Copernicus digital elevation model.
 This is terrain elevation, not a water level or a survey-grade measurement.
+
+When the agent resolves a location, it also calls a CopilotKit frontend tool to
+pan and zoom the map to the selected result.

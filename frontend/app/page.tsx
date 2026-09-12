@@ -1,11 +1,29 @@
 "use client";
 
-import { CopilotChat } from "@copilotkit/react-core/v2";
+import { CopilotChat, useFrontendTool } from "@copilotkit/react-core/v2";
 import dynamic from "next/dynamic";
+import { useState } from "react";
+import { z } from "zod";
 
 const FloodMap = dynamic(() => import("../components/flood-map"), { ssr: false });
 
 export default function Home() {
+  const [mapTarget, setMapTarget] = useState<{ latitude: number; longitude: number; label: string }>();
+
+  useFrontendTool({
+    name: "focus_map",
+    description: "Pan and zoom the FloodGuard map to a resolved WGS84 location. Call this whenever the user asks about a location.",
+    parameters: z.object({
+      latitude: z.number().min(-90).max(90).describe("WGS84 latitude"),
+      longitude: z.number().min(-180).max(180).describe("WGS84 longitude"),
+      label: z.string().describe("Human-readable location name"),
+    }),
+    handler: async ({ latitude, longitude, label }) => {
+      setMapTarget({ latitude, longitude, label });
+      return `Map centered on ${label} at ${latitude.toFixed(5)}, ${longitude.toFixed(5)}.`;
+    },
+  }, []);
+
   return (
     <main className="app-shell">
       <section className="chat-panel" aria-label="FloodGuard assistant">
@@ -30,7 +48,7 @@ export default function Home() {
           </div>
           <span className="status"><i /> Monitoring</span>
         </div>
-        <FloodMap />
+        <FloodMap target={mapTarget} />
       </section>
     </main>
   );

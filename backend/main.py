@@ -8,7 +8,7 @@ from urllib.request import Request, urlopen
 
 import uvicorn
 from ag_ui_langgraph import add_langgraph_fastapi_endpoint
-from copilotkit import LangGraphAGUIAgent
+from copilotkit import CopilotKitMiddleware, LangGraphAGUIAgent
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from langchain.agents import create_agent
@@ -124,9 +124,11 @@ SYSTEM_PROMPT = """You are FloodGuard, a concise flood-operations assistant.
 Use get_flood_alerts whenever the user asks for conditions by location. Use
 get_location_coordinates to resolve a named place into WGS84 coordinates; call
 it before get_elevation if a user asks about terrain height for a place but has
-not supplied coordinates. Clearly label sample flood data as sample data, do
-not invent emergency instructions, and recommend users follow local authorities
-for life-safety decisions."""
+not supplied coordinates. When a user asks about any location, call the
+focus_map frontend tool with the selected latitude, longitude, and location
+label, so the map moves to that place. Clearly label sample flood data as sample
+data, do not invent emergency instructions, and recommend users follow local
+authorities for life-safety decisions."""
 
 model = ChatOpenAI(
     model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
@@ -135,6 +137,7 @@ model = ChatOpenAI(
 graph = create_agent(
     model=model,
     tools=[get_flood_alerts, get_location_coordinates, get_elevation],
+    middleware=[CopilotKitMiddleware()],
     system_prompt=SYSTEM_PROMPT,
     checkpointer=MemorySaver(),
 )
