@@ -1,6 +1,10 @@
 """FastAPI entry point for the FloodGuard LangChain agent."""
 
 import os
+from json import JSONDecodeError, loads
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 import uvicorn
 from ag_ui_langgraph import add_langgraph_fastapi_endpoint
@@ -13,6 +17,8 @@ from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
 
 load_dotenv()
+
+ELEVATION_API_URL = "https://api.open-meteo.com/v1/elevation"
 
 
 @tool
@@ -28,10 +34,52 @@ def get_flood_alerts(area: str) -> str:
     )
 
 
+@tool
+def get_elevation(latitude: float, longitude: float) -> str:
+    """Get terrain elevation in metres above mean sea level for WGS84 coordinates.
+
+    Use this when the user supplies a latitude and longitude or asks about the
+    terrain height of a known coordinate. The result is a 90 m DEM estimate,
+    not a surveyed elevation or a live water-level measurement.
+    """
+    if not -90 <= latitude <= 90:
+        return "Invalid latitude. It must be between -90 and 90 degrees."
+    if not -180 <= longitude <= 180:
+        return "Invalid longitude. It must be between -180 and 180 degrees."
+
+    query = urlencode({"latitude": latitude, "longitude": longitude})
+    request = Request(
+        f"{ELEVATION_API_URL}?{query}",
+        headers={"Accept": "application/json", "User-Agent": "FloodGuard/0.1"},
+    )
+    try:
+        with urlopen(request, timeout=10) as response:
+            payload = loads(response.read().decode("utf-8"))
+        elevation = payload["elevation"][0]
+    except (
+        HTTPError,
+        URLError,
+        TimeoutError,
+        JSONDecodeError,
+        KeyError,
+        IndexError,
+        TypeError,
+    ) as error:
+        return f"Unable to retrieve elevation data right now: {error}."
+
+    return (
+        f"Terrain elevation at {latitude:.5f}, {longitude:.5f} is approximately "
+        f"{elevation:.0f} m above mean sea level. Source: Open-Meteo's 90 m "
+        "Copernicus DEM elevation API."
+    )
+
+
 SYSTEM_PROMPT = """You are FloodGuard, a concise flood-operations assistant.
-Use get_flood_alerts whenever the user asks for conditions by location. Clearly
-label sample data as sample data, do not invent emergency instructions, and
-recommend users follow local authorities for life-safety decisions."""
+Use get_flood_alerts whenever the user asks for conditions by location. Use
+get_elevation when the user supplies WGS84 latitude/longitude and asks about
+terrain height. Clearly label sample flood data as sample data, do not invent
+emergency instructions, and recommend users follow local authorities for
+life-safety decisions."""
 
 model = ChatOpenAI(
     model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
@@ -39,7 +87,7 @@ model = ChatOpenAI(
 )
 graph = create_agent(
     model=model,
-    tools=[get_flood_alerts],
+    tools=[get_flood_alerts, get_elevation],
     system_prompt=SYSTEM_PROMPT,
     checkpointer=MemorySaver(),
 )

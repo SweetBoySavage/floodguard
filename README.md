@@ -36,3 +36,10 @@ Set `LANGGRAPH_AGENT_URL` in `frontend/.env.local` if the agent is elsewhere.
 
 The map markers and alert tool deliberately return sample data; wire both to a
 trusted hydrology/alert source before relying on the app operationally.
+
+## Elevation lookup
+
+The agent can answer a coordinate-based question such as: "What is the terrain
+elevation at 52.371, 4.898?" It calls Open-Meteo's public Elevation API, which
+uses a 90 m Copernicus digital elevation model. This is terrain elevation, not
+a water level or a survey-grade measurement.
