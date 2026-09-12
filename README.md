@@ -58,6 +58,11 @@ nearby Open-Meteo elevation grid. It highlights lower terrain cells as
 conceptual retention-screening candidates; it is not infrastructure design or
 evidence of viable water storage.
 
+When the selected location is Chattogram, the map also offers a separate,
+clearly labelled mitigation-demo overlay. Its retention, drainage, embankment,
+and critical-access features are illustrative design concepts only; they do not
+represent confirmed local assets, risks, or recommended construction sites.
+
 ## Flood-mitigation recommendations
 
 For mitigation questions, the agent loads the advisor instructions in
